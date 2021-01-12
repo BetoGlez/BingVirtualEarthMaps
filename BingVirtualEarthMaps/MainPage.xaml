@@ -10,8 +10,10 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="5*" />
+            <RowDefinition Height="0.5*" />
+            <RowDefinition Height="5*"/>
+            <RowDefinition Height="0.5*"/>
+            <RowDefinition Height="2*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*"/>
@@ -22,6 +24,13 @@
         <TextBox x:Name="originLocationTextBox" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="10, 0, 10, 0" PlaceholderText="Starting place"/>
         <TextBox x:Name="endLocationTextBox" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="10, 0, 10, 0" PlaceholderText="End place"/>
         <Button Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="10, 0, 10, 0" Click="SetTravelRoute">Calculate Route</Button>
+        
+        <TextBlock Grid.Row="2" Grid.Column="0" Padding="10" Text="Route data" VerticalAlignment="Bottom" FontSize="30" Opacity="0.4"/>
+        <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Padding="10" Text="Route directions" VerticalAlignment="Bottom" FontSize="30" Opacity="0.4"/>
+        <TextBlock x:Name="routeDataTextBlock" Grid.Row="3" Grid.Column="0" Padding="10, 20, 10, 20" TextWrapping="Wrap"/>
+        <ScrollViewer Grid.Row="3" Grid.ColumnSpan="2" Grid.Column="1">
+            <TextBlock x:Name="routeDirectionsTextBlock" Padding="10, 20, 10, 20" TextWrapping="Wrap"/>
+        </ScrollViewer>
         <Maps:MapControl x:Name="mapViewRoutes" Grid.Row="1" Grid.ColumnSpan="3" Margin="0,20,0,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
     </Grid>
 </Page>

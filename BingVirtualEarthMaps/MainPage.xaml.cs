@@ -35,14 +35,36 @@ namespace BingVirtualEarthMaps
 
         private async void SetTravelRoute(object sender, RoutedEventArgs e)
         {
-            ResetMapData();
+            ResetRouteData();
 
-            String pointA = originLocationTextBox.Text;
-            String pointB = endLocationTextBox.Text;
-            var httpClient = new HttpClient();
-            String rawRouteResponse = await httpClient.GetStringAsync(BASE_API_URL + "?wp.0=" + pointA + "&wp.1=" + pointB + "&avoid=minimizeTolls&routeAttributes=routePath&output=json&key=" + MAP_ACCS);
+            String placeA = originLocationTextBox.Text;
+            String placeB = endLocationTextBox.Text;
+            HttpClient httpClient = new HttpClient();
+            String rawRouteResponse = await httpClient.GetStringAsync(ComposeApiUrl(placeA, placeB));
             
             RouteData routeData = JsonConvert.DeserializeObject<RouteData>(rawRouteResponse);
+            DisplayMapRoute(routeData);
+            DisplayDirections(routeData);
+            DisplayRouteData(routeData);
+        }
+
+        private String ComposeApiUrl(String placeA, String placeB)
+        {
+            return BASE_API_URL + "?wp.0=" + placeA + "&wp.1=" + placeB + "&routeAttributes=routePath&output=json&key=" + MAP_ACCS;
+        }
+
+        private void ResetRouteData()
+        {
+            mapViewRoutes.MapElements.Clear();
+            for (int i = 0; i < mapViewRoutes.Layers.Count; i++) {
+                mapViewRoutes.Layers[i].Visible = false;
+            }
+            routeDirectionsTextBlock.Text = "";
+            routeDataTextBlock.Text = "";
+        }
+
+        private void DisplayMapRoute(RouteData routeData)
+        {
             Resource resources = routeData.resourceSets[0].resources[0];
 
             RouteLeg routeLeg = resources.routeLegs[0];
@@ -62,12 +84,32 @@ namespace BingVirtualEarthMaps
             }
         }
 
-        private void ResetMapData()
+        private void DisplayDirections(RouteData routeData)
         {
-            mapViewRoutes.MapElements.Clear();
-            for (int i = 0; i < mapViewRoutes.Layers.Count; i++) {
-                mapViewRoutes.Layers[i].Visible = false;
+            RouteLeg routeLeg = routeData.resourceSets[0].resources[0].routeLegs[0];
+            List<ItineraryItem> routePoints = routeLeg.itineraryItems;
+            String routeInstructions = "";
+            for (int i = 0; i < routePoints.Count; i++)
+            {
+                routeInstructions += " " + (i + 1) + ". " + routePoints[i].instruction.text + "\n";
             }
+            routeDirectionsTextBlock.Text = routeInstructions;
+        }
+
+        private void DisplayRouteData(RouteData routeData)
+        {
+            Resource resource = routeData.resourceSets[0].resources[0];
+            String routeOrigin = " • Start location: " + resource.routeLegs[0].startLocation.name;
+            String routeEnd = " • End location: " + resource.routeLegs[0].endLocation.name;
+            String routeDistance = " • Distance: " + resource.travelDistance + " kilometers";
+            TimeSpan rawTime = TimeSpan.FromSeconds(resource.travelDuration);
+            string formattedTime = rawTime.ToString(@"hh\:mm\:ss");
+            String routeTime = " • Duration: " + formattedTime;
+            String routeTraffic = " • Traffic: " + resource.trafficCongestion;
+
+            String routeStatisticData = routeOrigin + "\n" + routeEnd + "\n" + routeDistance + "\n" + routeTime + "\n" + routeTraffic;
+
+            routeDataTextBlock.Text = routeStatisticData;
         }
 
         private void CenterMapToCoords(double latitude, double longitude)
