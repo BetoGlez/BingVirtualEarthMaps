@@ -1,0 +1,27 @@
+﻿<Page
+    x:Class="BingVirtualEarthMaps.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:BingVirtualEarthMaps"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:Maps="using:Windows.UI.Xaml.Controls.Maps"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="5*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBox x:Name="originLocationTextBox" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="10, 0, 10, 0" PlaceholderText="Starting place"/>
+        <TextBox x:Name="endLocationTextBox" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="10, 0, 10, 0" PlaceholderText="End place"/>
+        <Button Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="10, 0, 10, 0" Click="SetTravelRoute">Calculate Route</Button>
+        <Maps:MapControl x:Name="mapViewRoutes" Grid.Row="1" Grid.ColumnSpan="3" Margin="0,20,0,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+    </Grid>
+</Page>
