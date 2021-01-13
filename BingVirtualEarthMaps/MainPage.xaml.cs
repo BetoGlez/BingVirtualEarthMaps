@@ -18,13 +18,14 @@ using Windows.UI;
 using System.Net.Http;
 using BingVirtualEarthMaps.Classes;
 using Newtonsoft.Json;
+using Windows.UI.Notifications;
 
 namespace BingVirtualEarthMaps
 {
     public sealed partial class MainPage : Page
     {
-        private readonly String MAP_ACCS = "UbyVV4Ma5EM8zXJ44OZi%7EE0q2RVZqdjQ2CX1z9HHMZw%7EAlQ1dCMOGkoxR9h0Gctn4QncW1KHvfVz_lvwqEobK-U2fcAQBw9z5hi9gWV6i2NU";
-        private readonly String BASE_API_URL = "http://dev.virtualearth.net/REST/V1/Routes/Driving";
+        private readonly string MAP_ACCS = "UbyVV4Ma5EM8zXJ44OZi%7EE0q2RVZqdjQ2CX1z9HHMZw%7EAlQ1dCMOGkoxR9h0Gctn4QncW1KHvfVz_lvwqEobK-U2fcAQBw9z5hi9gWV6i2NU";
+        private readonly string BASE_API_URL = "http://dev.virtualearth.net/REST/V1/Routes/Driving";
 
         public MainPage()
         {
@@ -35,17 +36,31 @@ namespace BingVirtualEarthMaps
 
         private async void SetTravelRoute(object sender, RoutedEventArgs e)
         {
-            ResetRouteData();
+            string placeA = originLocationTextBox.Text;
+            string placeB = endLocationTextBox.Text;
 
-            String placeA = originLocationTextBox.Text;
-            String placeB = endLocationTextBox.Text;
-            HttpClient httpClient = new HttpClient();
-            String rawRouteResponse = await httpClient.GetStringAsync(ComposeApiUrl(placeA, placeB));
-            
-            RouteData routeData = JsonConvert.DeserializeObject<RouteData>(rawRouteResponse);
-            DisplayMapRoute(routeData);
-            DisplayDirections(routeData);
-            DisplayRouteData(routeData);
+            if (!placeA.Trim().Equals("") && !placeB.Trim().Equals(""))
+            {
+                ResetRouteData();
+
+                HttpClient httpClient = new HttpClient();
+                HttpResponseMessage rawRouteResponse = await httpClient.GetAsync(ComposeApiUrl(placeA, placeB));
+                if (rawRouteResponse.IsSuccessStatusCode)
+                {
+                    string stringResponse = await rawRouteResponse.Content.ReadAsStringAsync();
+                    RouteData routeData = JsonConvert.DeserializeObject<RouteData>(stringResponse);
+                
+                    DisplayDirections(routeData);
+                    DisplayRouteData(routeData);
+                    DisplayMapRoute(routeData);
+                } else
+                {
+                    ShowToastNotification("Error calculating route", "No route was found for the provided destinations");
+                }
+            } else
+            {
+                ShowToastNotification("Missing data", "Please provide a start and end destination in order to calculate the route");
+            }
         }
 
         private String ComposeApiUrl(String placeA, String placeB)
@@ -88,7 +103,7 @@ namespace BingVirtualEarthMaps
         {
             RouteLeg routeLeg = routeData.resourceSets[0].resources[0].routeLegs[0];
             List<ItineraryItem> routePoints = routeLeg.itineraryItems;
-            String routeInstructions = "";
+            string routeInstructions = "";
             for (int i = 0; i < routePoints.Count; i++)
             {
                 routeInstructions += " " + (i + 1) + ". " + routePoints[i].instruction.text + "\n";
@@ -99,15 +114,15 @@ namespace BingVirtualEarthMaps
         private void DisplayRouteData(RouteData routeData)
         {
             Resource resource = routeData.resourceSets[0].resources[0];
-            String routeOrigin = " • Start location: " + resource.routeLegs[0].startLocation.name;
-            String routeEnd = " • End location: " + resource.routeLegs[0].endLocation.name;
-            String routeDistance = " • Distance: " + resource.travelDistance + " kilometers";
+            string routeOrigin = " • Start location: " + resource.routeLegs[0].startLocation.name;
+            string routeEnd = " • End location: " + resource.routeLegs[0].endLocation.name;
+            string routeDistance = " • Distance: " + resource.travelDistance + " kilometers";
             TimeSpan rawTime = TimeSpan.FromSeconds(resource.travelDuration);
             string formattedTime = rawTime.ToString(@"hh\:mm\:ss");
-            String routeTime = " • Duration: " + formattedTime;
-            String routeTraffic = " • Traffic: " + resource.trafficCongestion;
+            string routeTime = " • Duration: " + formattedTime;
+            string routeTraffic = " • Traffic: " + resource.trafficCongestion;
 
-            String routeStatisticData = routeOrigin + "\n" + routeEnd + "\n" + routeDistance + "\n" + routeTime + "\n" + routeTraffic;
+            string routeStatisticData = routeOrigin + "\n" + routeEnd + "\n" + routeDistance + "\n" + routeTime + "\n" + routeTraffic;
 
             routeDataTextBlock.Text = routeStatisticData;
         }
@@ -165,6 +180,22 @@ namespace BingVirtualEarthMaps
             };
 
             mapViewRoutes.Layers.Add(LinesLayer);
+        }
+
+        private void ShowToastNotification(string title, string stringContent)
+        {
+            ToastNotifier ToastNotifier = ToastNotificationManager.CreateToastNotifier();
+            Windows.Data.Xml.Dom.XmlDocument toastXml = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastText02);
+            Windows.Data.Xml.Dom.XmlNodeList toastNodeList = toastXml.GetElementsByTagName("text");
+            toastNodeList.Item(0).AppendChild(toastXml.CreateTextNode(title));
+            toastNodeList.Item(1).AppendChild(toastXml.CreateTextNode(stringContent));
+            Windows.Data.Xml.Dom.IXmlNode toastNode = toastXml.SelectSingleNode("/toast");
+            Windows.Data.Xml.Dom.XmlElement audio = toastXml.CreateElement("audio");
+            audio.SetAttribute("src", "ms-winsoundevent:Notification.SMS");
+
+            ToastNotification toast = new ToastNotification(toastXml);
+            toast.ExpirationTime = DateTime.Now.AddSeconds(4);
+            ToastNotifier.Show(toast);
         }
     }
 }
